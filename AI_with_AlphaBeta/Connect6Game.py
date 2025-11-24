@@ -1,10 +1,11 @@
 from Board import Board
-from MInimaxAI import MinimaxAI
+from AlphaBetaAI import AlphaBetaAI
+
 
 class Connect6Game:
     def __init__(self):
         self.board = Board(19)
-        self.ai = MinimaxAI()
+        self.ai = AlphaBetaAI()
         self.current_player = 1
         self.move_count = 0
 
@@ -32,7 +33,7 @@ class Connect6Game:
 
     def play(self):
 
-        print("=== CONNECT-6 GAME ===")
+        print("=== CONNECT-6 GAME (Alpha-Beta + Zobrist) ===")
         print("You are X (Black), AI is O (White)")
         print("First move: 1 stone, then 2 stones per turn")
         print("Win by getting 6 in a row!\n")
@@ -59,6 +60,6 @@ class Connect6Game:
                 for x, y in moves:
                     self.board.place_stone(x, y, self.current_player)
 
-            # Switch players
+
             self.current_player *= -1
             self.move_count += 1

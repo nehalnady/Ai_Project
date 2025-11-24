@@ -1,19 +1,29 @@
-from Evaluator import Evaluator
+from Evaluator import Evaluator, DIRS
+
 
 class MinimaxAI:
     def __init__(self):
         self.evaluator = Evaluator()
         self.nodes_searched = 0
-        self.transposition_table = {}  # Zobrist hash -> (depth, score)
-        self.tt_hits = 0  # Track cache hits
+        self.transposition_table = {}
+        self.tt_hits = 0
+
+
+    def local_heuristic(self, board, x, y):
+
+        score = 0
+        for dx, dy in DIRS:
+            cx, cy = x + dx, y + dy
+            if 0 <= cx < board.size and 0 <= cy < board.size and board.grid[cx][cy] != 0:
+                score += 5
+        return score
 
     def get_candidates(self, board):
-        """Get empty cells near existing stones"""
-        candidates = set()
 
+        candidates = set()
         if board.is_board_empty():
-            center = board.size // 2
-            return [(center, center)]
+            c = board.size // 2
+            return [(c, c)]
 
         for x in range(board.size):
             for y in range(board.size):
@@ -24,112 +34,165 @@ class MinimaxAI:
                             if board.is_empty(nx, ny):
                                 candidates.add((nx, ny))
 
-        return list(candidates) if candidates else [(board.size // 2, board.size // 2)]
+        cand_list = list(candidates)
+        cand_list.sort(key=lambda mv: -self.local_heuristic(board, mv[0], mv[1]))
+        return cand_list if cand_list else [(board.size // 2, board.size // 2)]
+
+
+    def find_forced_blocks(self, board, player):
+
+        opponent = -player
+        blocks = []
+        added = set()
+
+
+        for x in range(board.size):
+            for y in range(board.size):
+                if not board.is_empty(x, y):
+                    continue
+
+                board.place_stone(x, y, opponent)
+
+                if self.evaluator.check_win(board, opponent):
+                    if (x, y) not in added:
+                        blocks.append((x, y))
+                        added.add((x, y))
+                    board.remove_stone(x, y)
+                    continue
+
+                if self.evaluator.has_threat(board, opponent, 5):
+                    if (x, y) not in added:
+                        blocks.append((x, y))
+                        added.add((x, y))
+                    board.remove_stone(x, y)
+                    continue
+
+                if self.evaluator.has_threat(board, opponent, 4):
+                    if (x, y) not in added:
+                        blocks.append((x, y))
+                        added.add((x, y))
+                    board.remove_stone(x, y)
+                    continue
+
+                board.remove_stone(x, y)
+
+        return blocks
+
 
     def find_immediate_threat(self, board, player):
-        """Find if opponent can win in next move"""
-        opponent = -player
-        candidates = self.get_candidates(board)
 
-        for x, y in candidates:
+        opponent = -player
+        for x, y in self.get_candidates(board)[:30]:
             board.place_stone(x, y, opponent)
             if self.evaluator.check_win(board, opponent):
                 board.remove_stone(x, y)
                 return (x, y)
             board.remove_stone(x, y)
-        return None
+
+
+        forced = self.find_forced_blocks(board, player)
+        return forced[0] if forced else None
+
 
     def minimax(self, board, depth, player, is_maximizing):
-        """Pure Minimax algorithm with Zobrist hashing"""
         self.nodes_searched += 1
 
-        # Check transposition table
-        board_hash = board.hash
-        if board_hash in self.transposition_table:
-            stored_depth, stored_score = self.transposition_table[board_hash]
-            if stored_depth >= depth:
+        h = board.hash
+        if h in self.transposition_table:
+            saved_depth, saved_score = self.transposition_table[h]
+            if saved_depth >= depth:
                 self.tt_hits += 1
-                return stored_score
+                return saved_score
 
-        # Terminal conditions
-        if depth == 0 or self.evaluator.check_win(board, 1) or self.evaluator.check_win(board, -1):
-            score = self.evaluator.evaluate(board, player)
-            self.transposition_table[board_hash] = (depth, score)
-            return score
-
-        candidates = self.get_candidates(board)[:15]  # Limit search
 
         if is_maximizing:
-            max_eval = -float('inf')
+
+            opp_forced = self.find_forced_blocks(board, -player)
+            if opp_forced:
+                return -999999
+        else:
+
+            self_forced = self.find_forced_blocks(board, player)
+            if self_forced:
+                return 999999
+
+
+        if depth == 0 or self.evaluator.check_win(board, 1) or self.evaluator.check_win(board, -1):
+            score = self.evaluator.evaluate(board, player)
+            self.transposition_table[h] = (depth, score)
+            return score
+
+        candidates = self.get_candidates(board)[:15]
+
+        if is_maximizing:
+            best_val = -float("inf")
             for x, y in candidates:
                 board.place_stone(x, y, player)
-                eval_score = self.minimax(board, depth - 1, player, False)
+                val = self.minimax(board, depth - 1, player, False)
                 board.remove_stone(x, y)
-                max_eval = max(max_eval, eval_score)
-
-            # Store in transposition table
-            self.transposition_table[board_hash] = (depth, max_eval)
-            return max_eval
+                best_val = max(best_val, val)
+            self.transposition_table[h] = (depth, best_val)
+            return best_val
         else:
-            min_eval = float('inf')
+            best_val = float("inf")
             for x, y in candidates:
                 board.place_stone(x, y, -player)
-                eval_score = self.minimax(board, depth - 1, player, True)
+                val = self.minimax(board, depth - 1, player, True)
                 board.remove_stone(x, y)
-                min_eval = min(min_eval, eval_score)
+                best_val = min(best_val, val)
+            self.transposition_table[h] = (depth, best_val)
+            return best_val
 
-            # Store in transposition table
-            self.transposition_table[board_hash] = (depth, min_eval)
-            return min_eval
 
     def find_best_move(self, board, player, num_stones):
-        """Find best move using minimax with Zobrist hashing"""
-        print(f"\nAI is thinking (searching {num_stones} stone(s))...")
+        print(f"\nAI is thinking (search depth: 2)...")
         self.nodes_searched = 0
         self.tt_hits = 0
 
-        # Priority 1: Block immediate threats
-        threats_blocked = []
+
+        forced = self.find_forced_blocks(board, player)
+        if forced:
+
+            take = forced[:num_stones]
+            print("AI MUST BLOCK (forced):", take)
+            return take
+
+
+        blocked = []
         for _ in range(num_stones):
             threat = self.find_immediate_threat(board, player)
             if threat:
-                threats_blocked.append(threat)
+                blocked.append(threat)
                 board.place_stone(threat[0], threat[1], player)
 
-        if len(threats_blocked) == num_stones:
-            for x, y in threats_blocked:
+        if len(blocked) == num_stones:
+            for x, y in blocked:
                 board.remove_stone(x, y)
-            print(f"AI BLOCKING threats at: {threats_blocked}")
-            print(f"Nodes searched: {self.nodes_searched} | TT hits: {self.tt_hits}")
-            return threats_blocked
+            print("AI BLOCKS (immediate):", blocked)
+            return blocked
 
-        # Undo temporary placements
-        for x, y in threats_blocked:
+
+        for x, y in blocked:
             board.remove_stone(x, y)
 
-        # Find best moves using minimax
+
         candidates = self.get_candidates(board)[:20]
-        best_moves = []
 
         if num_stones == 1:
-            best_score = -float('inf')
+            best_score = -float("inf")
             best_move = None
-
             for x, y in candidates:
                 board.place_stone(x, y, player)
                 score = self.minimax(board, 2, player, False)
                 board.remove_stone(x, y)
-
                 if score > best_score:
                     best_score = score
                     best_move = (x, y)
-
-            best_moves = [best_move]
-
-        else:  # 2 stones
-            best_score = -float('inf')
+            print("AI chose:", best_move, "score:", best_score)
+            return [best_move]
+        else:
+            best_score = -float("inf")
             best_pair = None
-
             for i, (x1, y1) in enumerate(candidates):
                 for x2, y2 in candidates[i + 1:]:
                     board.place_stone(x1, y1, player)
@@ -137,14 +200,8 @@ class MinimaxAI:
                     score = self.minimax(board, 1, player, False)
                     board.remove_stone(x1, y1)
                     board.remove_stone(x2, y2)
-
                     if score > best_score:
                         best_score = score
                         best_pair = [(x1, y1), (x2, y2)]
-
-            best_moves = best_pair if best_pair else [candidates[0], candidates[1]]
-
-        print(f"AI chose: {best_moves} (Score: {best_score if 'best_score' in locals() else 'N/A'})")
-        print(
-            f"Nodes searched: {self.nodes_searched} | TT hits: {self.tt_hits} | Hit rate: {self.tt_hits / max(1, self.nodes_searched) * 100:.1f}%")
-        return best_moves
+            print("AI chose pair:", best_pair, "score:", best_score)
+            return best_pair

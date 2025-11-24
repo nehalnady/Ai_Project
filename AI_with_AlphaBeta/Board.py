@@ -1,8 +1,7 @@
 from ZobristHash import ZobristHash
 
+
 class Board:
-
-
     def __init__(self, size=19):
         self.size = size
         self.grid = [[0] * size for _ in range(size)]
@@ -40,4 +39,3 @@ class Board:
                 symbol = "X" if cell == 1 else "O" if cell == -1 else "."
                 print(f"{symbol}  ", end="")
             print()
-
