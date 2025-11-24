@@ -1,6 +1,6 @@
 import time
-from movegen import generate_move_pairs
-from evaluator import Evaluator, WIN_SCORE
+from AI_with_mini_alpha_huristics.movegen import generate_move_pairs
+from AI_with_mini_alpha_huristics.evaluator import Evaluator, WIN_SCORE
 
 class Searcher:
     def __init__(self):

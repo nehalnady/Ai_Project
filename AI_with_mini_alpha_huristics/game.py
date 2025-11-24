@@ -1,4 +1,4 @@
-from board import Board
+from AI_with_mini_alpha_huristics.board import Board
 from searcher import Searcher
 
 class Game:
