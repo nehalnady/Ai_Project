@@ -1,7 +1,7 @@
 import time
 import tkinter as tk
 from Board import Board
-from MinimaxAI import MinimaxAI
+from MinimaxAIAlphaBeta import MinimaxAIAlphaBeta
 from Evaluator import DIRS
 
 class Connect6GUI:
@@ -14,7 +14,7 @@ class Connect6GUI:
 
         # Game objects
         self.board_obj = Board(self.size)
-        self.ai = MinimaxAI()
+        self.ai = MinimaxAIAlphaBeta()
 
         # Turn & stones tracking
         self.turn = 1  # human = 1 (black), AI = -1 (white)
