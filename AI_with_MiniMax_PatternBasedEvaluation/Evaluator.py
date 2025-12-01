@@ -4,7 +4,7 @@ DIRS = [(1, 0), (0, 1), (1, 1), (1, -1)]
 
 class Evaluator:
     def __init__(self):
-        # Pre-computed score table
+
         self.score_table = {
             6: 1000000,  # Six or more
             5: 50000,  # Five

@@ -1,6 +1,6 @@
 WIN_SCORE = 10**9
 
-# Directions
+
 DIRS = [(1,0),(0,1),(1,1),(1,-1)]
 
 class Evaluator:

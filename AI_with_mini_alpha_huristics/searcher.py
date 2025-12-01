@@ -4,19 +4,19 @@ from AI_with_mini_alpha_huristics.evaluator import Evaluator, WIN_SCORE
 
 class Searcher:
     def __init__(self):
-        self.tt = {}        # transposition table
+        self.tt = {}
         self.evaluator = Evaluator()
         self.nodes = 0
 
     def negamax(self, board, depth, alpha, beta, color):
         self.nodes += 1
 
-        # Transposition Table lookup
+
         old = self.tt.get(board.hash)
         if old is not None and old["depth"] >= depth:
             return old["score"]
 
-        # Terminal or depth reached
+
         if depth == 0:
             score = self.evaluator.evaluate(board, color)
             return score
@@ -39,7 +39,7 @@ class Searcher:
                 alpha = best_score
 
             if alpha >= beta:
-                break  # alpha-beta cutoff
+                break
 
         # Save to TT
         self.tt[board.hash] = {"depth": depth, "score": best_score}
@@ -71,17 +71,14 @@ class Searcher:
         return best_move
 
     def find_immediate_block(self, board, color):
-        """
-        Check if the opponent has a 5-in-a-row next turn.
-        If yes, return a move that blocks it immediately.
-        """
+
         opp = -color
-        moves = generate_move_pairs(board, is_first_move=False)  # <-- pass is_first_move
+        moves = generate_move_pairs(board, is_first_move=False)
 
         for move in moves:
-            board.apply_move(move, opp)  # simulate opponent move
+            board.apply_move(move, opp)
             score = self.evaluator.evaluate(board, opp)
             board.undo_move(move, opp)
-            if score >= WIN_SCORE:  # opponent can win
-                return move  # block this move
+            if score >= WIN_SCORE:
+                return move
         return None

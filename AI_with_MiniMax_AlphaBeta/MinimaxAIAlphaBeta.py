@@ -4,7 +4,7 @@ class MinimaxAIAlphaBeta:
     def __init__(self):
         self.evaluator = Evaluator()
 
-    # Only allowed heuristic: reduce move space
+
     def get_candidates(self, board):
         candidates = set()
 
@@ -24,7 +24,7 @@ class MinimaxAIAlphaBeta:
 
 
     def minimax(self, board, depth, player, maximizing, alpha, beta):
-        # Terminal conditions:
+
         if depth == 0 or \
            self.evaluator.check_win(board, 1) or \
            self.evaluator.check_win(board, -1):
@@ -74,7 +74,7 @@ class MinimaxAIAlphaBeta:
 
         candidates = self.get_candidates(board)
 
-        # single stone
+
         if num_stones == 1:
             best_score = -float("inf")
             best_move = None
@@ -95,7 +95,7 @@ class MinimaxAIAlphaBeta:
 
             return [best_move]
 
-        # two stones
+
         else:
             best_score = -float("inf")
             best_pair = None
