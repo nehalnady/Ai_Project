@@ -44,13 +44,6 @@ class OptimizedConnect6GUI:
                                       font=("Arial", 10, "bold"), padx=10, pady=10)
         control_frame.pack(side=tk.TOP, fill=tk.X, padx=5, pady=5)
 
-        # Board size
-        # tk.Label(control_frame, text="Board Size:", font=("Arial", 9)).grid(row=0, column=0, padx=5)
-        # self.size_var = tk.IntVar(value=19)
-        # size_combo = ttk.Combobox(control_frame, textvariable=self.size_var,
-        #                           values=[9, 13, 15, 19], state="readonly", width=5)
-        # size_combo.grid(row=0, column=1, padx=5)
-
         # Time limit slider
         tk.Label(control_frame, text="AI Time Limit:", font=("Arial", 9)).grid(row=0, column=2, padx=5)
         self.time_limit_var = tk.DoubleVar(value=5.0)
@@ -115,14 +108,13 @@ class OptimizedConnect6GUI:
         self.moves_label.grid(row=2, column=3, sticky=tk.W, padx=5)
 
         # Status bar
-        self.status_label = tk.Label(self.window, text="● Ready - Select board size and click Start",
+        self.status_label = tk.Label(self.window, text="● Ready - Click Start to begin",
                                      font=("Arial", 9), fg="#4CAF50", relief=tk.SUNKEN, anchor=tk.W)
         self.status_label.pack(side=tk.BOTTOM, fill=tk.X)
 
     def start_game(self):
         """Initialize game with optimized AI"""
         try:
-            # self.size = self.size_var.get()
             time_limit = self.time_limit_var.get()
 
             # Calculate cell size
@@ -255,7 +247,7 @@ class OptimizedConnect6GUI:
         self.draw_highlights()
 
         if self.check_win(1):
-            self.end_game("🎉 Human Wins!")
+            self.end_game("Human Wins!")
             return
 
         if self.human_placed >= self.human_needed:
@@ -306,7 +298,7 @@ class OptimizedConnect6GUI:
             self.draw_highlights()
 
             if self.check_win(-1):
-                self.end_game("🤖 AI Wins!")
+                self.end_game("AI Wins!")
                 return
 
         self.turn = 1
@@ -357,7 +349,7 @@ class OptimizedConnect6GUI:
         self.moves_label.config(text=f"{self.total_turns} turns / {self.total_stones} stones")
 
     def end_game(self, message):
-        """End game with statistics"""
+        """End game with statistics and options dialog"""
         self.game_over = True
 
         avg = sum(self.ai_times) / len(self.ai_times) if self.ai_times else 0
@@ -371,14 +363,186 @@ class OptimizedConnect6GUI:
         stats += f"Cache Hit Rate: {total_cache_rate:.1f}%\n"
 
         self.status_label.config(text=f"● {message}", fg="red")
-        messagebox.showinfo("Game Over", stats)
+
+        # Print to console
+        print("\n" + "=" * 50)
+        print(stats)
+        print("=" * 50)
+
+        # Show custom dialog
+        self.show_game_over_dialog(message, avg, total_cache_rate)
+
+    def show_game_over_dialog(self, message, avg_time, cache_rate):
+        """Show custom dialog with three options after game ends"""
+        dialog = tk.Toplevel(self.window)
+        dialog.title("Game Over")
+        dialog.geometry("400x400")
+        dialog.resizable(False, False)
+        dialog.configure(bg="#2C3E50")
+
+        # Make dialog modal
+        dialog.transient(self.window)
+        dialog.grab_set()
+
+        # Center the dialog
+        dialog.update_idletasks()
+        x = (dialog.winfo_screenwidth() // 2) - (400 // 2)
+        y = (dialog.winfo_screenheight() // 2) - (400 // 2)
+        dialog.geometry(f"+{x}+{y}")
+
+        # Header
+        header_frame = tk.Frame(dialog, bg="#34495E", pady=15)
+        header_frame.pack(fill=tk.X)
+
+        winner = "Human" if "Human" in message else "AI"
+        winner_emoji = "🎉" if winner == "Human" else "🤖"
+        tk.Label(
+            header_frame,
+            text=f"{winner_emoji} {message} {winner_emoji}",
+            font=("Arial", 16, "bold"),
+            bg="#34495E",
+            fg="#F1C40F" if winner == "Human" else "#3498DB"
+        ).pack()
+
+        # Stats frame
+        stats_frame = tk.Frame(dialog, bg="#2C3E50", pady=20)
+        stats_frame.pack(fill=tk.BOTH, expand=True)
+
+        stats_data = [
+            ("Board Size:", f"{self.size}×{self.size}"),
+            ("Total Turns:", str(self.total_turns)),
+            ("Total Stones:", str(self.total_stones)),
+            ("Avg AI Time:", f"{avg_time:.3f}s"),
+            ("Total Nodes:", f"{self.total_nodes:,}"),
+            ("Cache Hit Rate:", f"{cache_rate:.1f}%")
+        ]
+
+        for i, (label, value) in enumerate(stats_data):
+            row_frame = tk.Frame(stats_frame, bg="#2C3E50")
+            row_frame.pack(fill=tk.X, padx=30, pady=3)
+
+            tk.Label(
+                row_frame,
+                text=label,
+                font=("Arial", 10, "bold"),
+                bg="#2C3E50",
+                fg="#BDC3C7",
+                anchor=tk.W,
+                width=15
+            ).pack(side=tk.LEFT)
+
+            tk.Label(
+                row_frame,
+                text=value,
+                font=("Arial", 10),
+                bg="#2C3E50",
+                fg="white",
+                anchor=tk.W
+            ).pack(side=tk.LEFT)
+
+        # Buttons frame
+        btn_frame = tk.Frame(dialog, bg="#2C3E50", pady=15)
+        btn_frame.pack(fill=tk.X)
+
+        def play_again():
+            dialog.destroy()
+            self.restart_game()
+
+        def choose_level():
+            dialog.destroy()
+            self.window.destroy()
+            import subprocess
+            import sys
+            subprocess.Popen([sys.executable, "../MainLauncher.py"])
+
+        def quit_game():
+            dialog.destroy()
+            self.window.destroy()
+
+        # Play Again button
+        tk.Button(
+            btn_frame,
+            text="🔄 Play Again",
+            font=("Arial", 11, "bold"),
+            bg="#27AE60",
+            fg="white",
+            width=18,
+            height=2,
+            command=play_again,
+            cursor="hand2"
+        ).pack(pady=5)
+
+        # Choose Another Level button
+        tk.Button(
+            btn_frame,
+            text="🎮 Choose Another Level",
+            font=("Arial", 11, "bold"),
+            bg="#3498DB",
+            fg="white",
+            width=18,
+            height=2,
+            command=choose_level,
+            cursor="hand2"
+        ).pack(pady=5)
+
+        # Quit button
+        tk.Button(
+            btn_frame,
+            text="❌ Quit",
+            font=("Arial", 11, "bold"),
+            bg="#E74C3C",
+            fg="white",
+            width=18,
+            height=2,
+            command=quit_game,
+            cursor="hand2"
+        ).pack(pady=5)
+
+        # Wait for dialog to close
+        dialog.wait_window()
+
+    def restart_game(self):
+        """Restart the current game"""
+        # Store the time limit before resetting
+        time_limit = self.time_limit_var.get()
+
+        # Reset game state
+        self.board_obj = Board(self.size)
+        self.ai = OptimizedAI(max_time=time_limit)
+
+        self.turn = 1
+        self.human_needed = 1
+        self.human_placed = 0
+        self.game_over = False
+        self.last_moves = []
+        self.ai_times = []
+        self.total_turns = 0
+        self.total_stones = 0
+
+        self.total_nodes = 0
+        self.total_cache_hits = 0
+        self.depths_reached = []
+
+        # Update UI metrics
+        self.last_time_label.config(text="--")
+        self.avg_time_label.config(text="--")
+        self.depth_label.config(text="--")
+        self.nodes_label.config(text="--")
+        self.cache_label.config(text="--")
+        self.moves_label.config(text="0 turns / 0 stones")
+
+        self.status_label.config(text=f"● Game Active - {self.size}×{self.size} | Time Limit: {time_limit}s",
+                                 fg="#4CAF50")
+
+        # Redraw board
+        self.draw_board()
 
     def reset_game(self):
-        """Reset game"""
+        """Reset to initial state (before game started)"""
         self.game_started = False
         self.start_btn.config(state=tk.NORMAL)
         self.reset_btn.config(state=tk.DISABLED)
-        self.status_label.config(text="● Ready - Select settings and click Start", fg="#4CAF50")
+        self.status_label.config(text="● Ready - Click Start to begin", fg="#4CAF50")
 
         # Clear metrics
         self.last_time_label.config(text="--")
