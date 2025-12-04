@@ -3,8 +3,6 @@ import tkinter as tk
 from tkinter import messagebox
 import sys
 import os
-import subprocess  # Add this import at the top
-
 
 class UnifiedConnect6GUI:
     """
@@ -142,6 +140,10 @@ class UnifiedConnect6GUI:
     def update_moves_label(self):
         self.moves_label.config(text=f"Turns: {self.total_turns} | Stones: {self.total_stones}")
 
+    # ---------- draw check ----------
+    def is_draw(self):
+        return all(self.board_obj.grid[x][y] != 0 for x in range(self.size) for y in range(self.size))
+
     # ---------- human click ----------
     def handle_click(self, event):
         if self.game_over or self.turn != 1:
@@ -166,6 +168,9 @@ class UnifiedConnect6GUI:
 
         if self.check_win(1):
             self.end_game("Human")
+            return
+        elif self.is_draw():
+            self.end_game("Draw")
             return
 
         # finish human turn if placed required stones
@@ -205,6 +210,10 @@ class UnifiedConnect6GUI:
             if self.check_win(-1):
                 self.end_game("AI")
                 return
+
+        if self.is_draw():
+            self.end_game("Draw")
+            return
 
         self.turn = 1
         self.total_turns += 1
@@ -253,11 +262,14 @@ class UnifiedConnect6GUI:
 
         # Create detailed statistics message
         stats = "=" * 50 + "\n"
-        stats += f"🎮 GAME OVER - {winner.upper()} WINS!\n"
+        if winner == "Draw":
+            stats += f"🎮 GAME OVER - DRAW!\n"
+        else:
+            stats += f"🎮 GAME OVER - {winner.upper()} WINS!\n"
         stats += "=" * 50 + "\n\n"
 
         stats += f"👤 Opponent: {self.ai_name}\n"
-        stats += f"🏆 Winner: {winner}\n\n"
+        stats += f"🏆 Result: {winner}\n\n"
 
         stats += "📊 Game Statistics:\n"
         stats += f"  • Total Turns: {self.total_turns}\n"
@@ -299,13 +311,22 @@ class UnifiedConnect6GUI:
         header_frame = tk.Frame(dialog, bg="#34495E", pady=15)
         header_frame.pack(fill=tk.X)
 
-        winner_emoji = "🎉" if winner == "Human" else "🤖"
+        if winner == "Draw":
+            msg = "🤝 GAME DRAWN! 🤝"
+            color = "#F1C40F"
+        elif winner == "Human":
+            msg = "🎉 HUMAN WINS! 🎉"
+            color = "#F1C40F"
+        else:
+            msg = f"🤖 {winner.upper()} WINS! 🤖"
+            color = "#3498DB"
+
         tk.Label(
             header_frame,
-            text=f"{winner_emoji} {winner.upper()} WINS! {winner_emoji}",
+            text=msg,
             font=("Arial", 18, "bold"),
             bg="#34495E",
-            fg="#F1C40F" if winner == "Human" else "#3498DB"
+            fg=color
         ).pack()
 
         # Stats frame
@@ -354,35 +375,7 @@ class UnifiedConnect6GUI:
         def choose_level():
             dialog.destroy()
             self.window.destroy()
-
-            # IMPROVED: More robust path finding
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-
-            # Try multiple possible locations for MainLauncher.py
-            possible_paths = [
-                os.path.join(current_dir, "MainLauncher.py"),  # Same directory
-                os.path.join(os.path.dirname(current_dir), "MainLauncher.py"),  # Parent directory
-                os.path.join(os.path.dirname(os.path.dirname(current_dir)), "MainLauncher.py"),  # Grandparent
-                "MainLauncher.py"  # Current working directory
-            ]
-
-            for launcher_path in possible_paths:
-                if os.path.exists(launcher_path):
-                    print(f"Found MainLauncher.py at: {launcher_path}")
-                    try:
-                        subprocess.Popen([sys.executable, launcher_path])
-                    except Exception as e:
-                        print(f"Error launching: {e}")
-                        # Try alternative approach
-                        os.system(f'python "{launcher_path}"')
-                    return
-
-            # Fallback: show error message
-            print("ERROR: Could not find MainLauncher.py")
-            print("Searched in:")
-            for path in possible_paths:
-                print(f"  - {path}")
-            messagebox.showerror("Error", "Main menu launcher not found!\nPlease run MainLauncher.py manually.")
+            # Do NOT launch MainLauncher.py here; main process will handle menu.
 
         def quit_game():
             dialog.destroy()
@@ -455,28 +448,5 @@ class UnifiedConnect6GUI:
             )
             if not result:
                 return
-
         self.window.destroy()
-
-        # IMPROVED: Use the same robust path finding
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-
-        possible_paths = [
-            os.path.join(current_dir, "MainLauncher.py"),
-            os.path.join(os.path.dirname(current_dir), "MainLauncher.py"),
-            os.path.join(os.path.dirname(os.path.dirname(current_dir)), "MainLauncher.py"),
-            "MainLauncher.py"
-        ]
-
-        for launcher_path in possible_paths:
-            if os.path.exists(launcher_path):
-                print(f"Found MainLauncher.py at: {launcher_path}")
-                try:
-                    subprocess.Popen([sys.executable, launcher_path])
-                except Exception as e:
-                    print(f"Error launching: {e}")
-                    os.system(f'python "{launcher_path}"')
-                return
-
-        print("ERROR: Could not find MainLauncher.py")
-        messagebox.showerror("Error", "Main menu launcher not found!\nPlease run MainLauncher.py manually.")
+        # Do NOT launch MainLauncher.py here; main process will handle menu.
