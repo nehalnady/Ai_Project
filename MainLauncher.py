@@ -12,15 +12,13 @@ class GameLauncher:
         self.window.geometry("750x650")
         self.window.configure(bg="#2C3E50")
 
-        # Center window on screen
-        self.center_window()
-
         # Custom fonts
         self.title_font = tkfont.Font(family="Arial", size=28, weight="bold")
         self.subtitle_font = tkfont.Font(family="Arial", size=14)
         self.button_font = tkfont.Font(family="Arial", size=12, weight="bold")
 
         self.setup_ui()
+        self.center_window()
         self.window.mainloop()
 
     def center_window(self):
@@ -63,7 +61,7 @@ class GameLauncher:
         content_frame = tk.Frame(self.window, bg="#2C3E50")
         content_frame.pack(expand=True, fill=tk.BOTH, padx=40, pady=30)
 
-        # AI Level buttons
+        # AI Level buttons (UPDATED paths)
         levels = [
             {
                 "name": "LEVEL 1: BASIC MINIMAX",
@@ -71,7 +69,7 @@ class GameLauncher:
                 "difficulty": "Beginner",
                 "stars": "⭐",
                 "color": "#27AE60",
-                "launch_file": "launch_level1.py"
+                "launch_file": "AI_with_MiniMax_only/launch_level1.py"
             },
             {
                 "name": "LEVEL 2: ALPHA-BETA PRUNING",
@@ -79,7 +77,7 @@ class GameLauncher:
                 "difficulty": "Easy",
                 "stars": "⭐⭐",
                 "color": "#3498DB",
-                "launch_file": "launch_level2.py"
+                "launch_file": "AI_with_MiniMax_AlphaBeta/launch_level2.py"
             },
             {
                 "name": "LEVEL 3: PATTERN RECOGNITION",
@@ -87,7 +85,7 @@ class GameLauncher:
                 "difficulty": "Medium",
                 "stars": "⭐⭐⭐",
                 "color": "#F39C12",
-                "launch_file": "launch_level3.py"
+                "launch_file": "AI_with_MiniMax_PatternBasedEvaluation/launch_level3.py"
             },
             {
                 "name": "LEVEL 4: THREAT ANALYSIS",
@@ -95,7 +93,7 @@ class GameLauncher:
                 "difficulty": "Hard",
                 "stars": "⭐⭐⭐⭐",
                 "color": "#E74C3C",
-                "launch_file": "launch_level4.py"
+                "launch_file": "AI_with_MiniMax_ThreatMoveEvaluation/launch_level4.py"
             },
             {
                 "name": "LEVEL 5: OPTIMIZED AI",
@@ -103,7 +101,7 @@ class GameLauncher:
                 "difficulty": "Expert",
                 "stars": "⭐⭐⭐⭐⭐",
                 "color": "#8E44AD",
-                "launch_file": "launch_level5.py"
+                "launch_file": "AI_with_OptimizedAI/launch_level5.py"
             }
         ]
 
@@ -200,14 +198,14 @@ class GameLauncher:
 
         # Right side: Play button
         def launch_level():
-            self.window.destroy()
+            self.window.withdraw()  # Hide the main menu window
             try:
-                # Launch the level using the launch file
-                subprocess.Popen([sys.executable, level["launch_file"]])
+                # Launch the level using the launch file and wait for it to close
+                process = subprocess.Popen([sys.executable, level["launch_file"]])
+                process.wait()  # Wait until the game window is closed
             except Exception as e:
-                # Fallback: show error and restart launcher
                 messagebox.showerror("Launch Error", f"Could not launch {level['name']}:\n{str(e)}")
-                subprocess.Popen([sys.executable, "MainLauncher.py"])
+            self.window.deiconify()  # Show the main menu window again
 
         play_btn = tk.Button(
             frame,
