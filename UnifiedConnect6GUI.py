@@ -4,6 +4,7 @@ from tkinter import messagebox
 import sys
 import os
 
+
 class UnifiedConnect6GUI:
     """
     Enhanced Connect6 GUI with game statistics and menu navigation
@@ -286,8 +287,8 @@ class UnifiedConnect6GUI:
 
         print("\n" + stats)
 
-        # Show custom dialog with three options
-        self.show_game_over_dialog(winner, avg, game_duration)
+        # Show custom dialog with three options (use after to delay dialog creation)
+        self.window.after(100, lambda: self.show_game_over_dialog(winner, avg, game_duration))
 
     def show_game_over_dialog(self, winner, avg_time, game_duration):
         """Show custom dialog with three options after game ends"""
@@ -299,13 +300,24 @@ class UnifiedConnect6GUI:
 
         # Make dialog modal
         dialog.transient(self.window)
-        dialog.grab_set()
 
         # Center the dialog
         dialog.update_idletasks()
         x = (dialog.winfo_screenwidth() // 2) - (400 // 2)
         y = (dialog.winfo_screenheight() // 2) - (350 // 2)
         dialog.geometry(f"+{x}+{y}")
+
+        # IMPORTANT: Wait for dialog to be visible before grabbing focus
+        dialog.deiconify()
+        dialog.update()
+        dialog.focus_force()
+
+        # Try to grab focus with error handling
+        try:
+            dialog.grab_set()
+        except tk.TclError:
+            # If grab fails, try again after a short delay
+            dialog.after(50, lambda: dialog.grab_set())
 
         # Header
         header_frame = tk.Frame(dialog, bg="#34495E", pady=15)
@@ -375,7 +387,6 @@ class UnifiedConnect6GUI:
         def choose_level():
             dialog.destroy()
             self.window.destroy()
-            # Do NOT launch MainLauncher.py here; main process will handle menu.
 
         def quit_game():
             dialog.destroy()
@@ -449,4 +460,3 @@ class UnifiedConnect6GUI:
             if not result:
                 return
         self.window.destroy()
-        # o NOT launch MainLauncher.py here; main process will handle menu.
