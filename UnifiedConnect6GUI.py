@@ -449,4 +449,4 @@ class UnifiedConnect6GUI:
             if not result:
                 return
         self.window.destroy()
-        # Do NOT launch MainLauncher.py here; main process will handle menu.
+        # o NOT launch MainLauncher.py here; main process will handle menu.
