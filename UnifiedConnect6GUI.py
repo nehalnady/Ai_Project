@@ -1,6 +1,9 @@
 import time
 import tkinter as tk
 from tkinter import messagebox
+import sys
+import os
+import subprocess  # Add this import at the top
 
 
 class UnifiedConnect6GUI:
@@ -351,9 +354,35 @@ class UnifiedConnect6GUI:
         def choose_level():
             dialog.destroy()
             self.window.destroy()
-            import subprocess
-            import sys
-            subprocess.Popen([sys.executable, "MainLauncher.py"])
+
+            # IMPROVED: More robust path finding
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+
+            # Try multiple possible locations for MainLauncher.py
+            possible_paths = [
+                os.path.join(current_dir, "MainLauncher.py"),  # Same directory
+                os.path.join(os.path.dirname(current_dir), "MainLauncher.py"),  # Parent directory
+                os.path.join(os.path.dirname(os.path.dirname(current_dir)), "MainLauncher.py"),  # Grandparent
+                "MainLauncher.py"  # Current working directory
+            ]
+
+            for launcher_path in possible_paths:
+                if os.path.exists(launcher_path):
+                    print(f"Found MainLauncher.py at: {launcher_path}")
+                    try:
+                        subprocess.Popen([sys.executable, launcher_path])
+                    except Exception as e:
+                        print(f"Error launching: {e}")
+                        # Try alternative approach
+                        os.system(f'python "{launcher_path}"')
+                    return
+
+            # Fallback: show error message
+            print("ERROR: Could not find MainLauncher.py")
+            print("Searched in:")
+            for path in possible_paths:
+                print(f"  - {path}")
+            messagebox.showerror("Error", "Main menu launcher not found!\nPlease run MainLauncher.py manually.")
 
         def quit_game():
             dialog.destroy()
@@ -428,7 +457,26 @@ class UnifiedConnect6GUI:
                 return
 
         self.window.destroy()
-        # Relaunch main menu
-        import subprocess
-        import sys
-        subprocess.Popen([sys.executable, "MainLauncher.py"])
+
+        # IMPROVED: Use the same robust path finding
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+
+        possible_paths = [
+            os.path.join(current_dir, "MainLauncher.py"),
+            os.path.join(os.path.dirname(current_dir), "MainLauncher.py"),
+            os.path.join(os.path.dirname(os.path.dirname(current_dir)), "MainLauncher.py"),
+            "MainLauncher.py"
+        ]
+
+        for launcher_path in possible_paths:
+            if os.path.exists(launcher_path):
+                print(f"Found MainLauncher.py at: {launcher_path}")
+                try:
+                    subprocess.Popen([sys.executable, launcher_path])
+                except Exception as e:
+                    print(f"Error launching: {e}")
+                    os.system(f'python "{launcher_path}"')
+                return
+
+        print("ERROR: Could not find MainLauncher.py")
+        messagebox.showerror("Error", "Main menu launcher not found!\nPlease run MainLauncher.py manually.")

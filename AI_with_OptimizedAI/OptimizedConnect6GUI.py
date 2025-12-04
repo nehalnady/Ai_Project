@@ -388,7 +388,7 @@ class OptimizedConnect6GUI:
         dialog.update_idletasks()
         x = (dialog.winfo_screenwidth() // 2) - (400 // 2)
         y = (dialog.winfo_screenheight() // 2) - (400 // 2)
-        dialog.geometry(f"+{x}+{y}")
+        dialog.geometry(f"+{x}+{y}")  # FIXED LINE - was f**(-{x}={y})"
 
         # Header
         header_frame = tk.Frame(dialog, bg="#34495E", pady=15)
@@ -451,9 +451,29 @@ class OptimizedConnect6GUI:
         def choose_level():
             dialog.destroy()
             self.window.destroy()
+
             import subprocess
             import sys
-            subprocess.Popen([sys.executable, "../MainLauncher.py"])
+            import os
+
+            # Get current directory
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+
+            # Try multiple possible locations for MainLauncher.py
+            possible_paths = [
+                os.path.join(current_dir, "MainLauncher.py"),
+                os.path.join(os.path.dirname(current_dir), "MainLauncher.py"),
+                "MainLauncher.py"
+            ]
+
+            for launcher_path in possible_paths:
+                if os.path.exists(launcher_path):
+                    print(f"Found MainLauncher at: {launcher_path}")
+                    subprocess.Popen([sys.executable, launcher_path])
+                    return
+
+            # Fallback: show error
+            messagebox.showerror("Error", "Main menu launcher not found!")
 
         def quit_game():
             dialog.destroy()

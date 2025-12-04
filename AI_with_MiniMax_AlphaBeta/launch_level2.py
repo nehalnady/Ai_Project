@@ -10,4 +10,5 @@ if __name__ == "__main__":
         board_class=Board,
         ai_class=MinimaxAIAlphaBeta,
         ai_name="Level 2: Alpha-Beta Pruning",
-        evaluator_dirs=DIRS)
+        evaluator_dirs=DIRS
+    )
