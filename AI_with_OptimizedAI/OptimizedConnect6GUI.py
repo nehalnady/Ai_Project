@@ -128,7 +128,7 @@ class OptimizedConnect6GUI:
             self.depths_reached = []
 
             self.start_btn.config(state=tk.DISABLED)
-            self.reset_btn.config(state=tk.NORMAL)
+            # self.reset_btn.config(state=tk.NORMAL)
             self.status_label.config(text=f"● Game Active - {self.size}×{self.size} | Time Limit: {time_limit}s",
                                      fg="#4CAF50")
             self.create_canvas()
