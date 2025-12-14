@@ -1,17 +1,15 @@
 import time
 import tkinter as tk
 from tkinter import messagebox
-import sys
-import os
 
 
 class UnifiedConnect6GUI:
     """
     Enhanced Connect6 GUI with game statistics and menu navigation
-    Works with any AI implementation
+    Works with any AI implementation and supports custom board sizes
     """
 
-    def __init__(self, board_class, ai_class, ai_name="AI", evaluator_dirs=None):
+    def __init__(self, board_class, ai_class, ai_name="AI", evaluator_dirs=None, board_size=19):
         self.window = tk.Tk()
         self.window.title(f"Connect6 vs {ai_name}")
 
@@ -21,9 +19,18 @@ class UnifiedConnect6GUI:
         self.ai_name = ai_name
         self.DIRS = evaluator_dirs or [(1, 0), (0, 1), (1, 1), (1, -1)]
 
-        # Game settings
-        self.size = 19
-        self.cell = 30
+        # Game settings - UPDATED to accept board_size parameter
+        self.size = board_size
+
+        # Adjust cell size based on board size
+        if self.size == 9:
+            self.cell = 45
+        elif self.size <= 13:
+            self.cell = 38
+        elif self.size <= 15:
+            self.cell = 33
+        else:
+            self.cell = 30
 
         # Game objects
         self.board_obj = board_class(self.size)
@@ -87,13 +94,17 @@ class UnifiedConnect6GUI:
         tk.Label(info_frame, text="Opponent:", font=("Arial", 9, "bold")).grid(row=0, column=0, padx=5)
         tk.Label(info_frame, text=ai_name, font=("Arial", 9), fg="#2196F3").grid(row=0, column=1, padx=5)
 
+        tk.Label(info_frame, text="Board Size:", font=("Arial", 9, "bold")).grid(row=0, column=2, padx=5)
+        tk.Label(info_frame, text=f"{self.size}×{self.size}", font=("Arial", 9), fg="#E67E22").grid(row=0, column=3,
+                                                                                                    padx=5)
+
         tk.Label(info_frame, text="Last AI Time:", font=("Arial", 9, "bold")).grid(row=1, column=0, padx=5)
         self.time_label = tk.Label(info_frame, text="0.000s", font=("Arial", 9))
         self.time_label.grid(row=1, column=1, padx=5)
 
-        tk.Label(info_frame, text="Moves:", font=("Arial", 9, "bold")).grid(row=2, column=0, padx=5)
+        tk.Label(info_frame, text="Moves:", font=("Arial", 9, "bold")).grid(row=1, column=2, padx=5)
         self.moves_label = tk.Label(info_frame, text="Turns: 0 | Stones: 0", font=("Arial", 9))
-        self.moves_label.grid(row=2, column=1, padx=5)
+        self.moves_label.grid(row=1, column=3, padx=5)
 
         self.draw_grid()
         self.window.mainloop()
@@ -110,6 +121,20 @@ class UnifiedConnect6GUI:
                 i * self.cell + self.cell // 2, self.cell // 2,
                 i * self.cell + self.cell // 2, self.size * self.cell - self.cell // 2
             )
+
+        # Draw star points for larger boards
+        if self.size >= 13:
+            stars = {
+                19: [(3, 3), (3, 9), (3, 15), (9, 3), (9, 9), (9, 15), (15, 3), (15, 9), (15, 15)],
+                15: [(3, 3), (3, 11), (7, 7), (11, 3), (11, 11)],
+                13: [(3, 3), (3, 9), (6, 6), (9, 3), (9, 9)]
+            }.get(self.size, [])
+
+            for sx, sy in stars:
+                px = sx * self.cell + self.cell // 2
+                py = sy * self.cell + self.cell // 2
+                self.canvas.create_oval(px - 3, py - 3, px + 3, py + 3, fill="black")
+
         # draw existing stones
         for x in range(self.size):
             for y in range(self.size):
@@ -122,14 +147,22 @@ class UnifiedConnect6GUI:
     def draw_stone(self, x, y, player):
         px = x * self.cell + self.cell // 2
         py = y * self.cell + self.cell // 2
+
+        # Adjust stone size based on cell size
+        radius = max(8, min(12, self.cell // 3))
+
         color = "black" if player == 1 else "white"
-        self.canvas.create_oval(px - 12, py - 12, px + 12, py + 12, fill=color, outline="black")
+        self.canvas.create_oval(px - radius, py - radius, px + radius, py + radius,
+                                fill=color, outline="black", width=2)
 
     def highlight_last_moves(self):
         for (x, y) in self.last_moves:
             px = x * self.cell + self.cell // 2
             py = y * self.cell + self.cell // 2
-            self.canvas.create_oval(px - 4, py - 4, px + 4, py + 4, fill="yellow", tags="highlight")
+            highlight_radius = max(3, self.cell // 10)
+            self.canvas.create_oval(px - highlight_radius, py - highlight_radius,
+                                    px + highlight_radius, py + highlight_radius,
+                                    fill="yellow", tags="highlight")
 
     # ---------- move tracking ----------
     def place_stone(self, x, y, player):
@@ -234,13 +267,13 @@ class UnifiedConnect6GUI:
                     while 0 <= nx < self.size and 0 <= ny < self.size and grid[nx][ny] == player:
                         coords.append((nx, ny))
                         count += 1
-                        nx += dx;
+                        nx += dx
                         ny += dy
                     nx, ny = x - dx, y - dy
                     while 0 <= nx < self.size and 0 <= ny < self.size and grid[nx][ny] == player:
                         coords.insert(0, (nx, ny))
                         count += 1
-                        nx -= dx;
+                        nx -= dx
                         ny -= dy
                     if count >= 6:
                         self.highlight_win_line(coords[:6])
@@ -251,7 +284,10 @@ class UnifiedConnect6GUI:
         for (x, y) in stones:
             px = x * self.cell + self.cell // 2
             py = y * self.cell + self.cell // 2
-            self.canvas.create_rectangle(px - 14, py - 14, px + 14, py + 14, outline="red", width=3)
+            win_size = max(10, self.cell // 2.5)
+            self.canvas.create_rectangle(px - win_size, py - win_size,
+                                         px + win_size, py + win_size,
+                                         outline="red", width=3)
 
     # ---------- end & restart ----------
     def end_game(self, winner):
@@ -270,6 +306,7 @@ class UnifiedConnect6GUI:
         stats += "=" * 50 + "\n\n"
 
         stats += f"👤 Opponent: {self.ai_name}\n"
+        stats += f"📏 Board Size: {self.size}×{self.size}\n"
         stats += f"🏆 Result: {winner}\n\n"
 
         stats += "📊 Game Statistics:\n"
@@ -287,14 +324,14 @@ class UnifiedConnect6GUI:
 
         print("\n" + stats)
 
-        # Show custom dialog with three options (use after to delay dialog creation)
+        # Show custom dialog with three options
         self.window.after(100, lambda: self.show_game_over_dialog(winner, avg, game_duration))
 
     def show_game_over_dialog(self, winner, avg_time, game_duration):
         """Show custom dialog with three options after game ends"""
         dialog = tk.Toplevel(self.window)
         dialog.title("Game Over")
-        dialog.geometry("400x350")
+        dialog.geometry("400x380")
         dialog.resizable(False, False)
         dialog.configure(bg="#2C3E50")
 
@@ -304,19 +341,17 @@ class UnifiedConnect6GUI:
         # Center the dialog
         dialog.update_idletasks()
         x = (dialog.winfo_screenwidth() // 2) - (400 // 2)
-        y = (dialog.winfo_screenheight() // 2) - (350 // 2)
+        y = (dialog.winfo_screenheight() // 2) - (380 // 2)
         dialog.geometry(f"+{x}+{y}")
 
-        # IMPORTANT: Wait for dialog to be visible before grabbing focus
+        # Wait for dialog to be visible before grabbing focus
         dialog.deiconify()
         dialog.update()
         dialog.focus_force()
 
-        # Try to grab focus with error handling
         try:
             dialog.grab_set()
         except tk.TclError:
-            # If grab fails, try again after a short delay
             dialog.after(50, lambda: dialog.grab_set())
 
         # Header
@@ -347,6 +382,7 @@ class UnifiedConnect6GUI:
 
         stats_data = [
             ("Opponent:", self.ai_name),
+            ("Board Size:", f"{self.size}×{self.size}"),
             ("Total Turns:", str(self.total_turns)),
             ("Total Stones:", str(self.total_stones)),
             ("Game Duration:", f"{game_duration:.1f}s"),

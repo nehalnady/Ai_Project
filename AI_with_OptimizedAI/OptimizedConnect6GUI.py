@@ -5,14 +5,25 @@ from Board import Board
 from OptimizedAI import OptimizedAI
 from Evaluator import DIRS
 
+
 class OptimizedConnect6GUI:
-    def __init__(self):
+    def __init__(self, board_size=19):
         self.window = tk.Tk()
         self.window.title("Connect6 - Optimized AI")
 
-        # Game state
-        self.size = 19
-        self.cell = 30
+        # Game state - accept board size parameter
+        self.size = board_size
+
+        # Adjust cell size based on board size
+        if self.size == 9:
+            self.cell = 45
+        elif self.size <= 13:
+            self.cell = 38
+        elif self.size <= 15:
+            self.cell = 33
+        else:
+            self.cell = 30
+
         self.board_obj = None
         self.ai = None
         self.game_started = False
@@ -43,6 +54,10 @@ class OptimizedConnect6GUI:
                                       font=("Arial", 10, "bold"), padx=10, pady=10)
         control_frame.pack(side=tk.TOP, fill=tk.X, padx=5, pady=5)
 
+        tk.Label(control_frame, text="Board Size:", font=("Arial", 9, "bold")).grid(row=0, column=0, padx=5)
+        tk.Label(control_frame, text=f"{self.size}×{self.size}", font=("Arial", 9), fg="#E67E22").grid(row=0, column=1,
+                                                                                                       padx=5)
+
         tk.Label(control_frame, text="AI Time Limit:", font=("Arial", 9)).grid(row=0, column=2, padx=5)
         self.time_limit_var = tk.DoubleVar(value=5.0)
         time_slider = tk.Scale(control_frame, from_=1, to=10, resolution=0.5,
@@ -59,6 +74,10 @@ class OptimizedConnect6GUI:
         self.reset_btn = tk.Button(control_frame, text="↻ Reset", command=self.reset_game,
                                    bg="#FF9800", fg="white", font=("Arial", 9, "bold"), state=tk.DISABLED)
         self.reset_btn.grid(row=0, column=6, padx=5)
+
+        self.menu_btn = tk.Button(control_frame, text="🏠 Menu", command=self.return_to_menu,
+                                  bg="#2196F3", fg="white", font=("Arial", 9, "bold"))
+        self.menu_btn.grid(row=0, column=7, padx=5)
 
         canvas_frame = tk.Frame(self.window, relief=tk.SUNKEN, borderwidth=2)
         canvas_frame.pack(side=tk.TOP, padx=5, pady=5)
@@ -103,12 +122,6 @@ class OptimizedConnect6GUI:
     def start_game(self):
         try:
             time_limit = self.time_limit_var.get()
-            if self.size == 9:
-                self.cell = 45
-            elif self.size <= 13:
-                self.cell = 38
-            else:
-                self.cell = 30
 
             self.board_obj = Board(self.size)
             self.ai = OptimizedAI(max_time=time_limit)
@@ -128,7 +141,6 @@ class OptimizedConnect6GUI:
             self.depths_reached = []
 
             self.start_btn.config(state=tk.DISABLED)
-            # self.reset_btn.config(state=tk.NORMAL)
             self.status_label.config(text=f"● Game Active - {self.size}×{self.size} | Time Limit: {time_limit}s",
                                      fg="#4CAF50")
             self.create_canvas()
@@ -158,6 +170,7 @@ class OptimizedConnect6GUI:
         if self.size >= 13:
             stars = {
                 19: [(3, 3), (3, 9), (3, 15), (9, 3), (9, 9), (9, 15), (15, 3), (15, 9), (15, 15)],
+                15: [(3, 3), (3, 11), (7, 7), (11, 3), (11, 11)],
                 13: [(3, 3), (3, 9), (6, 6), (9, 3), (9, 9)]
             }.get(self.size, [])
             for sx, sy in stars:
@@ -311,14 +324,14 @@ class OptimizedConnect6GUI:
     def show_game_over_dialog(self, message, avg_time, cache_rate):
         dialog = tk.Toplevel(self.window)
         dialog.title("Game Over")
-        dialog.geometry("400x400")
+        dialog.geometry("400x420")
         dialog.resizable(False, False)
         dialog.configure(bg="#2C3E50")
         dialog.transient(self.window)
         dialog.grab_set()
         dialog.update_idletasks()
         x = (dialog.winfo_screenwidth() // 2) - (400 // 2)
-        y = (dialog.winfo_screenheight() // 2) - (400 // 2)
+        y = (dialog.winfo_screenheight() // 2) - (420 // 2)
         dialog.geometry(f"+{x}+{y}")
         header_frame = tk.Frame(dialog, bg="#34495E", pady=15)
         header_frame.pack(fill=tk.X)
@@ -370,15 +383,19 @@ class OptimizedConnect6GUI:
             ).pack(side=tk.LEFT)
         btn_frame = tk.Frame(dialog, bg="#2C3E50", pady=15)
         btn_frame.pack(fill=tk.X)
+
         def play_again():
             dialog.destroy()
             self.restart_game()
+
         def choose_level():
             dialog.destroy()
             self.window.destroy()
+
         def quit_game():
             dialog.destroy()
             self.window.destroy()
+
         tk.Button(
             btn_frame,
             text="🔄 Play Again",
@@ -454,5 +471,28 @@ class OptimizedConnect6GUI:
             self.canvas.destroy()
             self.canvas = None
 
+    def return_to_menu(self):
+        """Return to main menu"""
+        if self.game_started and not self.game_over:
+            result = messagebox.askyesno(
+                "Confirm",
+                "Game in progress. Return to main menu?",
+                icon='warning'
+            )
+            if not result:
+                return
+        self.window.destroy()
+
+
 if __name__ == "__main__":
-    gui = OptimizedConnect6GUI()
+    import sys
+
+    board_size = 19
+    if len(sys.argv) > 1:
+        try:
+            board_size = int(sys.argv[1])
+            if board_size not in [9, 13, 15, 19]:
+                board_size = 19
+        except ValueError:
+            board_size = 19
+    gui = OptimizedConnect6GUI(board_size=board_size)
