@@ -2,7 +2,8 @@ import sys
 import os
 
 # Add parent directory to path to access UnifiedConnect6GUI
-sys.path.append(os.path.join(os.path.dirname(__file__), "AI_with_AlphaBeta_ThreatEvaluation"))
+#sys.path.append(os.path.join(os.path.dirname(__file__), "AI_with_AlphaBeta_ThreatEvaluation"))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from UnifiedConnect6GUI import UnifiedConnect6GUI
 from Board import Board
