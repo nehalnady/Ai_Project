@@ -9,7 +9,7 @@ class GameLauncher:
     def __init__(self):
         self.window = tk.Tk()
         self.window.title("Connect6 - AI Level Selection")
-        self.window.geometry("750x700")
+        self.window.geometry("750x800")  # Increased height for 7 levels
         self.window.configure(bg="#2C3E50")
 
         # Custom fonts
@@ -52,7 +52,7 @@ class GameLauncher:
 
         subtitle = tk.Label(
             title_frame,
-            text="Challenge 5 Different AI Algorithms • First Move: 1 Stone • Then: 2 Stones per Turn",
+            text="Challenge 7 Different AI Algorithms • First Move: 1 Stone • Then: 2 Stones per Turn",
             font=self.subtitle_font,
             bg="#34495E",
             fg="#BDC3C7",
@@ -157,7 +157,7 @@ class GameLauncher:
         content_frame = tk.Frame(scrollable_frame, bg="#2C3E50")
         content_frame.pack(fill=tk.BOTH, expand=True, padx=40, pady=(0, 10))
 
-        # AI Level buttons
+        # AI Level buttons - NOW WITH 7 LEVELS!
         levels = [
             {
                 "name": "LEVEL 1: BASIC MINIMAX",
@@ -169,7 +169,7 @@ class GameLauncher:
             },
             {
                 "name": "LEVEL 2: ALPHA-BETA PRUNING",
-                "desc": "Optimized search with pruning techniques",
+                "desc": "Basic evaluation with alpha-beta optimization",
                 "difficulty": "Easy",
                 "stars": "⭐⭐",
                 "color": "#3498DB",
@@ -177,7 +177,7 @@ class GameLauncher:
             },
             {
                 "name": "LEVEL 3: PATTERN RECOGNITION",
-                "desc": "Evaluates stone patterns & formations",
+                "desc": "Minimax with pattern-based evaluation",
                 "difficulty": "Medium",
                 "stars": "⭐⭐⭐",
                 "color": "#F39C12",
@@ -185,10 +185,10 @@ class GameLauncher:
             },
             {
                 "name": "LEVEL 4: THREAT ANALYSIS",
-                "desc": "Advanced threat detection & response",
-                "difficulty": "Hard",
-                "stars": "⭐⭐⭐⭐",
-                "color": "#E74C3C",
+                "desc": "Minimax with threat detection evaluation",
+                "difficulty": "Medium-Hard",
+                "stars": "⭐⭐⭐",
+                "color": "#E67E22",
                 "launch_file": "AI_with_MiniMax_ThreatMoveEvaluation/launch_level4.py"
             },
             {
@@ -198,6 +198,22 @@ class GameLauncher:
                 "stars": "⭐⭐⭐⭐⭐",
                 "color": "#8E44AD",
                 "launch_file": "AI_with_OptimizedAI/launch_level5.py"
+            },
+            {
+                "name": "LEVEL 6: ALPHA-BETA + PATTERNS",
+                "desc": "Alpha-beta pruning with pattern evaluation",
+                "difficulty": "Hard",
+                "stars": "⭐⭐⭐⭐",
+                "color": "#16A085",
+                "launch_file": "AI_with_AlphaBeta_PatternEvaluation/launch_level6.py"
+            },
+            {
+                "name": "LEVEL 7: ALPHA-BETA + THREATS",
+                "desc": "Alpha-beta pruning with threat evaluation",
+                "difficulty": "Very Hard",
+                "stars": "⭐⭐⭐⭐⭐",
+                "color": "#E74C3C",
+                "launch_file": "AI_with_AlphaBeta_ThreatEvaluation/launch_level7.py"
             }
         ]
 
